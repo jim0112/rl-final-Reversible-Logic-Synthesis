@@ -24,7 +24,7 @@ my_config = {
     "algorithm": PPO,
     "policy_network": "MlpPolicy",
 
-    "epoch_num": 100,
+    "epoch_num": 50,
     "timesteps_per_epoch": 5000,
     "eval_episode_num": 10,
 }
@@ -36,6 +36,7 @@ def make_env():
 def train(env, model, config):
 
     current_best = -10000000
+    matched_best = 0
 
     for epoch in range(config["epoch_num"]):
 
@@ -53,6 +54,7 @@ def train(env, model, config):
         ### Evaluation
         print("Epoch: ", epoch)
         total_score = 0
+        matched = 0
         for i in range(10):
             done = False
             score = 0
@@ -64,24 +66,27 @@ def train(env, model, config):
                 score += r[0]
                 cnt += 1
             total_score += score
+            matched += info[0]["MatchCnt"][-1]
             # modify = # of legal moves in this episode
             # matchcnt = # of matched permutations
-            print(f'Episode: {i+1}, Score: {score}, Gate: {cnt}, MatchCnt: {info[0]["MatchCnt"][-1]} Modify: {info[0]["Modify"]}')
+            print(f'Episode: {i+1}, Score: {score}, Gate: {cnt}, MatchCnt: {info[0]["MatchCnt"][-1]}, Modify: {info[0]["Modify"]}, \n Initial State: \n {np.transpose(info[0]["Initial_State"])}, \n End State: \n {np.transpose(info[0]["End_State"])}')
             gates = info[0]["GateTrace"]
             for ele in np.transpose(gates):
                 print(ele)
             
         print(f'the average score is {total_score / 10}')
         ### Save best model
-        if current_best < total_score / 10:
-            print("Saving Model")
-            current_best = total_score / 10
+        if current_best < total_score and matched >= matched_best:
+            print(f"Saving Model with avg score {total_score / 10} and avg matchCnt {matched / 10}")
+            current_best = total_score
+            matched_best = matched
             save_path = 'models'
             model.save(f"{save_path}/best")
 
         print("---------------")
 
-        print(current_best)
+        print(current_best / 10)
+        print(matched_best / 10)
 
 
 if __name__ == "__main__":

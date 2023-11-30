@@ -123,7 +123,7 @@ class RLS(gym.Env):
             new_state.append(tmp)
         new_state = np.array(new_state)
 
-        reward = self.hammingDistanceMetric(new_state) + 0.2 * self.mismatchMetric(new_state)
+        reward = self.hammingDistanceMetric(new_state)
         # reward = self.permutationMetric(new_state)
 
         if self.illegalMove(new_state) or (new_state == self.pre).all():
@@ -144,8 +144,15 @@ class RLS(gym.Env):
         elif self.illegalCnt == self.illegalMax:
             done = True
             # self.visualize()
+        
+        info = {'MatchCnt': self.matchCntTrace,
+                'GateTrace': self.gateTrace,
+                'Modify': self.modify,
+                'Initial_State': self.initial_state,
+                'End_State': self.state,
+        }
 
-        return np.stack([self.pre, self.state, self.out], axis=0), reward, done, False, {'MatchCnt': self.matchCntTrace, 'GateTrace': self.gateTrace, 'Modify': self.modify}
+        return np.stack([self.pre, self.state, self.out], axis=0), reward, done, False, info
 
     def reset(self, seed=None):
         self.state = np.array(random.sample(self.base, len(self.base)))
