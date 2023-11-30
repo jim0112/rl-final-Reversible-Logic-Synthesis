@@ -1,11 +1,11 @@
-from collections import defaultdict
 import gymnasium as gym
 from gymnasium import spaces
 import random
+from copy import deepcopy
 
 import numpy as np
 
-class RLS(gym.Env):
+class RLS_eval(gym.Env):
     def __init__(self):
         # inp shape = {2^n, n}
         self.n = 3
@@ -103,7 +103,7 @@ class RLS(gym.Env):
         done = False
         new_state = []
         control = []
-        action = self.actiondict[action]
+        action = self.actiondict[action.item()]
         # 0: no, 1: control, 2: not
         for i, a in enumerate(action):
             if a == 1:
@@ -151,7 +151,7 @@ class RLS(gym.Env):
                 'End_State': self.state,
         }
 
-        return np.stack([self.pre, self.state, self.out], axis=0), reward, done, False, info
+        return np.stack([self.pre, self.state, self.out], axis=0).astype(int), reward, done, False, info
 
     def reset(self, seed=None):
         self.state = np.array(random.sample(self.base, len(self.base)))
@@ -168,7 +168,7 @@ class RLS(gym.Env):
         self.matchCntTrace = []
         
 
-        return np.stack([self.pre, self.state, self.out], axis=0), {}
+        return np.stack([self.pre, self.state, self.out], axis=0).astype(int), {}
 
     def render(self):
         # no use
