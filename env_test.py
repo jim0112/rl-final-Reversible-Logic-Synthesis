@@ -3,6 +3,7 @@ import gymnasium as gym
 from gymnasium.envs.registration import register
 from stable_baselines3 import PPO, A2C, DQN
 from transformation_based import output2gates
+from utils import string2index
 
 register(
     id='rls-eval',
@@ -13,7 +14,8 @@ model_path = "models/best"
 env = gym.make('rls-eval')
 model = PPO.load(model_path, env=env)
 episodes = 1000
-list2id = {'000': 0, '001':1, '010':2, '011':3, '100':4, '101':5, '110': 6, '111':7}
+n = 3
+list2id = string2index(n)
 
 ours, algorithms = 0, 0
 for i in range(episodes):

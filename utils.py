@@ -32,10 +32,21 @@ def make_actions(n):
     dfs(0, n, [], actions)
     return actions
 
+def string2index(n):
+    a = {}
+    for i in range(1 << n):
+        bits = bin(i)[2:]
+        while len(bits) < n:
+            bits = '0' + bits
+        a[bits] = i
+    return a
 if __name__ == '__main__':
-    res = make_base(3)
+    n = 4
+    res = make_base(n)
     print(res)
     print(len(res))
-    actions = make_actions(3)
+    actions = make_actions(n)
     print(actions)
     print(len(actions))
+    a = string2index(n)
+    print(a)
