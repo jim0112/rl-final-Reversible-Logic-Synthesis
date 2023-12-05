@@ -2,6 +2,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import random
 from copy import deepcopy
+from utils import make_actions, make_base
 
 import numpy as np
 
@@ -9,8 +10,9 @@ class RLS_eval(gym.Env):
     def __init__(self):
         # inp shape = {2^n, n}
         self.n = 3
-        self.base = [[0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1]]
-        self.action_space = spaces.Discrete(18)
+        self.base = make_base(self.n)
+        self.actiondict = make_actions(self.n)
+        self.action_space = spaces.Discrete(len(self.actiondict))
         self.observation_space = spaces.Box(0, 1, (3, 2 ** self.n, self.n), dtype=int)
         # can be changed to whatever u want
         self.step_penalty = -1
@@ -18,9 +20,6 @@ class RLS_eval(gym.Env):
         self.illegalMax = 20
         self.max_step = 200
 
-        self.actiondict = {0: [0,0,2], 1: [0,1,2], 2: [0,2,2], 3: [1,0,2], 4: [1,1,2], 5: [1,2,2], 6: [2,0,2], 
-                           7: [2,1,2], 8: [0,2,1], 9: [1,2,1], 10: [2,0,1], 11: [2,1,1], 12: [2,2,1], 13: [0,2,0], 
-                           14: [1,2,0], 15:[2,0,0], 16: [2,1,0], 17: [2,2,0]}
         self.reset()
 
     def hammingDistanceMetric(self, state):

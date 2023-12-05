@@ -39,5 +39,3 @@ def gates2output(n, gates):
 
 Y = [5, 3, 2, 4, 8, 7, 6, 1]
 gates = output2gates(3, Y)
-print(gates)
-print(gates2output(3, gates))
