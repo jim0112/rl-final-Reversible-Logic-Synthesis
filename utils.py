@@ -40,6 +40,36 @@ def string2index(n):
             bits = '0' + bits
         a[bits] = i
     return a
+
+# compute mask for every base, so that it can be "and" when in the env
+def base_mask(base, actiondict):
+    mask_action_dict = np.ones((len(base),len(actiondict)))
+    # ignoring the condition when last state (111) is matched, 
+    # cause it would definitely mask all the action
+    for n in range(len(base)-1):
+        state = base[n]
+        for act in range(len(actiondict)):
+            new_state = []
+            control = []
+            action = actiondict[act]
+            for i, a in enumerate(action):
+                if a == 1:
+                    control.append(i)
+
+                flip = 1
+                for c in control:
+                    flip *= state[c]
+                tmp = []
+                for i, bit in enumerate(state):
+                    if flip and action[i] == 2:
+                        tmp.append(0 if bit == 1 else 1)
+                    else:
+                        tmp.append(bit)
+            new_state.append(tmp)
+            if state != tmp:
+                mask_action_dict[n][act] = 0
+    return mask_action_dict
+
 if __name__ == '__main__':
     n = 4
     res = make_base(n)
