@@ -2,7 +2,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import random
 from copy import deepcopy
-from utils import make_actions, make_base
+from utils import make_actions, make_base, base_mask
 
 import numpy as np
 
@@ -19,7 +19,8 @@ class RLS_eval(gym.Env):
         self.illegalPenalty = -5
         self.illegalMax = 20
         self.max_step = 200
-
+        self.base_mask = base_mask(self.base,self.actiondict)
+        self.last_action = 0
         self.reset()
 
     def hammingDistanceMetric(self, state):
@@ -30,7 +31,8 @@ class RLS_eval(gym.Env):
             if new != out:
                 new_distance += 1
         o = new_distance - old_distance
-        return o
+        # as lower distance is better, giving -o
+        return -o
 
     def permutationMetric(self, state):
         old_match, new_match = 0, 0
@@ -77,6 +79,20 @@ class RLS_eval(gym.Env):
             else:
                 break
         return False
+    
+    def valid_action_mask(self):
+        cur = np.ones((1,len(self.actiondict)))
+        cur[0][self.last_action] = 0
+
+        max_idx = -1
+        # apply original transformed based mask
+        for ori, out in zip(self.state, self.out):
+            max_idx += 1
+            if (ori == out).all():
+                cur = np.logical_and(cur,self.base_mask[max_idx])
+            else :
+                return cur
+        return cur
 
     def visualize(self):
         print(f'Initial State:\n {np.transpose(self.initial_state)}')
@@ -102,6 +118,7 @@ class RLS_eval(gym.Env):
         done = False
         new_state = []
         control = []
+        self.last_action = action
         action = self.actiondict[action.item()]
         # 0: no, 1: control, 2: not
         for i, a in enumerate(action):
@@ -124,6 +141,8 @@ class RLS_eval(gym.Env):
         reward = self.hammingDistanceMetric(new_state)
         # reward = self.permutationMetric(new_state)
 
+        # remove penalty
+        """
         if self.illegalMove(new_state) or (new_state == self.pre).all():
             reward = self.illegalPenalty
             self.illegalCnt += 1
@@ -131,8 +150,13 @@ class RLS_eval(gym.Env):
             self.pre = self.state
             self.state = new_state
             self.modify += 1
+        """
+
+        self.pre = self.state
+        self.state = new_state
+        self.modify += 1
+
         reward += self.step_penalty
-        
         self.step_cnt += 1
         self.trace(action)
 
@@ -152,7 +176,9 @@ class RLS_eval(gym.Env):
 
         return np.stack([self.pre, self.state, self.out], axis=0).astype(int), reward, done, False, info
 
-    def reset(self, seed=None):
+    def reset(self, seed=None, **kwargs):
+        # add this to handle strange error that RLS.reset() doesn't eat options argument
+        kwargs.pop('options', None)
         self.state = np.array(random.sample(self.base, len(self.base)))
         self.pre = np.zeros(self.state.shape) - 1
         self.out = np.array(self.base)
