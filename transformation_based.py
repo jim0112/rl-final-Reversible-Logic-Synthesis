@@ -1,7 +1,4 @@
 import random
-n = 3
-Y = [*range(1 << n)]
-random.shuffle(Y)
 
 # gate的表示法:
 # 每個gate均用一個長度是n+1的list表示。list的第一的元素代表要被這個gate施加NOT運算的qbit編號。
@@ -61,13 +58,12 @@ def output2gates_bidirectional(n, Y):
                 if Y.index(X) & (1 << i) > 0 and X & (1 << i) == 0:
                     new_gates.append([i, *map(int, reversed(bin(X)[2:].zfill(n)))])
             gates_forward += new_gates
-            Y_old = Y
-            Y = [*range(X + 1), *Y[X + 1:]]
             for gate in new_gates:
                 ctrl = int(''.join(map(str, gate[:0:-1])), 2) & (((1 << n) - 1) ^ (1 << gate[0]))
+                Y_old = Y.copy()
                 for x in range(X, 1 << n):
-                    if ctrl & x == ctrl:  # apply NOT
-                        Y[x + (2 * int(x & (1 << gate[0]) == 0) - 1) * (1 << gate[0])] = Y_old[x]
+                    if ctrl & Y_old.index(x) == ctrl:  # apply NOT
+                        Y[Y_old.index(x) + (2 * int(Y_old.index(x) & (1 << gate[0]) == 0) - 1) * (1 << gate[0])] = x
     return gates_forward + gates_backward[::-1]
 
 # ex.
@@ -82,3 +78,11 @@ def gates2output(n, gates):
             if ctrl & Y[i] == ctrl:  # apply NOT
                 Y[i] += (2 * int(Y[i] & (1 << gate[0]) == 0) - 1) * (1 << gate[0])
     return Y
+
+if __name__ == "__main__":
+    n = 4
+    Y = [*range(1 << n)]
+    for _ in range(100):
+        random.shuffle(Y)
+        res = output2gates_bidirectional(n, Y)
+        print(len(res))

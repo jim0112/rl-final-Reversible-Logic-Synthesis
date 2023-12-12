@@ -24,7 +24,7 @@ my_config = {
     "algorithm": PPO,
     "policy_network": "MlpPolicy",
 
-    "epoch_num": 50,
+    "epoch_num": 1000,
     "timesteps_per_epoch": 5000,
     "eval_episode_num": 10,
 }
@@ -55,7 +55,7 @@ def train(env, model, config):
         print("Epoch: ", epoch)
         total_score = 0
         matched = 0
-        for i in range(10):
+        for i in range(20):
             done = False
             score = 0
             obs = env.reset()
@@ -74,10 +74,10 @@ def train(env, model, config):
             for ele in np.transpose(gates):
                 print(ele)
             
-        print(f'the average score is {total_score / 10}')
+        print(f'the average score is {total_score / 20}')
         ### Save best model
         if current_best < total_score and matched >= matched_best:
-            print(f"Saving Model with avg score {total_score / 10} and avg matchCnt {matched / 10}")
+            print(f"Saving Model with avg score {total_score / 20} and avg matchCnt {matched / 20}")
             current_best = total_score
             matched_best = matched
             save_path = 'models'
@@ -85,8 +85,8 @@ def train(env, model, config):
 
         print("---------------")
 
-        print(current_best / 10)
-        print(matched_best / 10)
+        print(current_best / 20)
+        print(matched_best / 20)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,12 @@
 import numpy as np
 
+def cal_factorial(n):
+    n = 1 << n
+    ans = 1
+    for i in range(1, n+1):
+        ans *= i
+    return ans
+
 def make_base(n):
     res = []
     for i in range(1 << n):
@@ -7,6 +14,18 @@ def make_base(n):
         while len(bits) < n:
             bits = '0' + bits
         res.append([int(b) for b in bits])
+    return res
+
+def make_test(n, nums, seed):
+    import random
+    random_seed = seed
+    random.seed(random_seed)
+    base = make_base(n)
+    shuffle = base.copy()
+    res = []
+    for _ in range(nums):
+        random.shuffle(shuffle)
+        res.append(shuffle[:])
     return res
 
 def isvalid(action):
@@ -72,11 +91,13 @@ def base_mask(base, actiondict):
 
 if __name__ == '__main__':
     n = 4
-    res = make_base(n)
-    print(res)
-    print(len(res))
-    actions = make_actions(n)
-    print(actions)
-    print(len(actions))
-    a = string2index(n)
-    print(a)
+    # res = make_base(n)
+    # print(res)
+    # print(len(res))
+    # actions = make_actions(n)
+    # print(actions)
+    # print(len(actions))
+    # a = string2index(n)
+    # print(a)
+    test = make_test(n, 10, 87)
+    

@@ -9,6 +9,7 @@ import torch.nn as nn
 from gymnasium import spaces
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 import numpy as np
+from utils import make_test
 
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 from sb3_contrib.common.wrappers import ActionMasker
@@ -30,12 +31,12 @@ my_config = {
     "run_id": "example",
 
     #"algorithm": PPO,
-    "algorithm": MaskablePPO,
+    "algorithm": MaskablePPO, #Todo: select different algorithms: A2C, DQN
     #"policy_network": "MlpPolicy",
     "policy_network": MaskableActorCriticPolicy,
 
-    "epoch_num": 50,
-    "timesteps_per_epoch": 5000,
+    "epoch_num": 500,
+    "timesteps_per_epoch": 10000,
     "eval_episode_num": 10,
 }
 def mask_fn(env:gym.Env) -> np.ndarray:
@@ -50,6 +51,8 @@ def train(env, model, config):
 
     current_best = -10000000
     matched_best = 0
+    eval_epochs = 100
+    tests = make_test(4, eval_epochs, 5487) # select a particular seed for evaluation
 
     for epoch in range(config["epoch_num"]):
 
@@ -69,10 +72,11 @@ def train(env, model, config):
         print("Epoch: ", epoch)
         total_score = 0
         matched = 0
-        for i in range(10):
+        for i in range(eval_epochs):
             done = False
             score = 0
             obs = env.reset()
+            obs[0][1] = tests[i]
             cnt = 0
             temp = []
             while not done:
@@ -87,20 +91,20 @@ def train(env, model, config):
             matched += info[0]["MatchCnt"][-1]
             # modify = # of legal moves in this episode
             # matchcnt = # of matched permutations
-            print(temp)
-            print(f'Episode: {i+1}, Score: {score}, Gate: {cnt}, MatchCnt: {info[0]["MatchCnt"][-1]}, Modify: {info[0]["Modify"]}, \n Initial State: \n {np.transpose(info[0]["Initial_State"])}, \n End State: \n {np.transpose(info[0]["End_State"])}')
-            gates = info[0]["GateTrace"]
-            for ele in np.transpose(gates):
-                print(ele)
+            # print(temp)
+            # print(f'Episode: {i+1}, Score: {score}, Gate: {cnt}, MatchCnt: {info[0]["MatchCnt"][-1]}, Modify: {info[0]["Modify"]}, \n Initial State: \n {np.transpose(info[0]["Initial_State"])}, \n End State: \n {np.transpose(info[0]["End_State"])}')
+            # gates = info[0]["GateTrace"]
+            # for ele in np.transpose(gates):
+            #     print(ele)
             
-        print(f'the average score is {total_score / 10}')
+        print(f'the average score is {total_score / eval_epochs}')
 #        wandb.log(
 #            {"avg_matched": matched/10,
 #            "avg_score": total_score/10}
 #        )
         ### Save best model
-        if current_best < total_score and matched >= matched_best:
-            print(f"Saving Model with avg score {total_score / 10} and avg matchCnt {matched / 10}")
+        if current_best <= total_score and matched >= matched_best:
+            print(f"Saving Model with avg score {total_score / eval_epochs} and avg matchCnt {matched / eval_epochs}")
             current_best = total_score
             matched_best = matched
             save_path = 'models'
@@ -108,8 +112,8 @@ def train(env, model, config):
 
         print("---------------")
 
-        print(current_best / 10)
-        print(matched_best / 10)
+        print(current_best / eval_epochs)
+        print(matched_best / eval_epochs)
 
 if __name__ == "__main__":
 
@@ -132,6 +136,6 @@ if __name__ == "__main__":
         env,
         verbose=0,
         learning_rate=0.0003,
-        tensorboard_log=my_config["run_id"]
+        # tensorboard_log=my_config["run_id"]
     )
     train(env, model, my_config)

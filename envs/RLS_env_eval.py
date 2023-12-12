@@ -1,7 +1,6 @@
 import gymnasium as gym
 from gymnasium import spaces
 import random
-from copy import deepcopy
 from utils import make_actions, make_base, base_mask
 
 import numpy as np
@@ -9,7 +8,7 @@ import numpy as np
 class RLS_eval(gym.Env):
     def __init__(self):
         # inp shape = {2^n, n}
-        self.n = 3
+        self.n = 4 # Todo: test the limit of n
         self.base = make_base(self.n)
         self.actiondict = make_actions(self.n)
         self.action_space = spaces.Discrete(len(self.actiondict))
@@ -89,7 +88,7 @@ class RLS_eval(gym.Env):
         for ori, out in zip(self.state, self.out):
             max_idx += 1
             if (ori == out).all():
-                cur = np.logical_and(cur,self.base_mask[max_idx])
+                cur = np.logical_and(cur, self.base_mask[max_idx])
             else :
                 return cur
         return cur
@@ -163,9 +162,9 @@ class RLS_eval(gym.Env):
         if self.step_cnt == self.max_step or (self.state == self.out).all():
             done = True
             # self.visualize()
-        elif self.illegalCnt == self.illegalMax:
-            done = True
-            # self.visualize()
+        # elif self.illegalCnt == self.illegalMax:
+        #     done = True
+        #     # self.visualize()
         
         info = {'MatchCnt': self.matchCntTrace,
                 'GateTrace': self.gateTrace,
@@ -176,11 +175,11 @@ class RLS_eval(gym.Env):
 
         return np.stack([self.pre, self.state, self.out], axis=0).astype(int), reward, done, False, info
 
-    def reset(self, seed=None, **kwargs):
+    def reset(self, **kwargs):
         # add this to handle strange error that RLS.reset() doesn't eat options argument
         kwargs.pop('options', None)
         self.state = np.array(random.sample(self.base, len(self.base)))
-        self.pre = np.zeros(self.state.shape) - 1
+        self.pre = np.zeros(self.state.shape) - 1 #Todo: more pre_state
         self.out = np.array(self.base)
         self.step_cnt = 0
         self.illegalCnt = 0
