@@ -1,0 +1,5 @@
+numpy
+stable-baselines3
+wandb
+tensorboard
+sb3-contrib

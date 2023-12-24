@@ -139,9 +139,7 @@ class RLS_eval(gym.Env):
 
         reward = self.hammingDistanceMetric(new_state)
         # reward = self.permutationMetric(new_state)
-
-        # remove penalty
-        """
+        
         if self.illegalMove(new_state) or (new_state == self.pre).all():
             reward = self.illegalPenalty
             self.illegalCnt += 1
@@ -149,11 +147,7 @@ class RLS_eval(gym.Env):
             self.pre = self.state
             self.state = new_state
             self.modify += 1
-        """
-
-        self.pre = self.state
-        self.state = new_state
-        self.modify += 1
+        
 
         reward += self.step_penalty
         self.step_cnt += 1
